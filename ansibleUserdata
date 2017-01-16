@@ -1,0 +1,23 @@
+#!/bin/bash
+# install aws cli
+yum install -y wget
+wget -P /tmp/ https://bootstrap.pypa.io/get-pip.py
+python /tmp/get-pip.py
+pip install awscli
+destination=/home/centos
+# import privatekey and public key from s3 into ec2
+aws s3 cp s3://iii-tutorial/common/id_rsa $destination/.ssh/
+chown centos $destination/.ssh/id_rsa
+chgrp centos $destination/.ssh/id_rsa
+chmod 600 $destination/.ssh/id_rsa
+aws s3 cp s3://iii-tutorial/common/id_rsa.pub /tmp/
+cat /tmp/id_rsa.pub >> $destination/.ssh/authorized_keys
+# change host file
+aws s3 cp s3://iii-tutorial/group4/hosts /tmp/
+cat /tmp/hosts >> /etc/hosts
+wget https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+rpm -Uvh epel-release-latest-6.noarch.rpm
+yum install -y ansible
+pip install awscli
+aws s3 cp s3://iii-tutorial/group4/ansible/hosts /etc/ansible/hosts
+chmod 755 /etc/ansible/hosts

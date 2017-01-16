@@ -1,0 +1,33 @@
+#step1 test connect 
+aws s3 cp s3://iii-tutorial/common/addKnownHosts.sh .
+sh addKnownHosts.sh
+ansible all -m ping
+
+#step2 renew known_hosts 執行腳本
+ansible all -m script -a "addKnownHosts.sh" -u centos
+
+
+#step3 close iptables 關防火牆
+#ansible all -m servcie -a "name=iptables state=stopped" -u centos -s
+ansible all -m service -a "name=iptables enabled=no" -u centos -s
+
+
+#step4 close selinux 關防火牆
+ansible all -m selinux -a "state=disabled" -u centos -s
+
+#step5 setting vm.swappiness value
+ansible all -m sysctl -a "name=vm.swappiness value=10 state=present" -s -u centos
+
+#step6 extends disk size and reboot 磁碟設定
+aws s3 cp s3://iii-tutorial/common/extendDisk.sh .
+ansible all -m script -a "extendDisk.sh" -u centos -s
+ansible all -m shell -a "reboot" -u centos -s
+
+#step7 close hugepage 
+ansible all -m shell -a "echo never > /sys/kernel/mm/transparent_hugepage/defrag" -s -u centos
+
+#step8 download cdm
+# ssh into master
+wget http://archive.cloudera.com/cm5/installer/latest/cloudera-manager-installer.bin
+chmod u+x cloudera-manager-installer.bin
+sudo ./cloudera-manager-installer.bin
